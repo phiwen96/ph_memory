@@ -10,3 +10,6 @@
 [submodule "dependencies/ph_macros"]
 	path = dependencies/ph_macros
 	url = https://github.com/phiwen96/ph_macros
+[submodule "dependencies/ph_system"]
+	path = dependencies/ph_system
+	url = https://github.com/phiwen96/ph_system
