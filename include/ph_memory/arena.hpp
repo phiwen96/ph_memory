@@ -1,29 +1,38 @@
 #ifndef ARENA_HPP
 #define ARENA_HPP
+
 using namespace std;
 
 
-template <size_t N>
+
+
+template <auto _size_value, decltype (_size_value) _alignment = alignof (max_align_t)>
 struct arena
 {
-    static constexpr size_t alignment = alignof (max_align_t);
+    using size_type = decltype (_size_value);
+    inline static constexpr size_type size_value = _size_value;
+    inline static constexpr size_type alignment = _alignment;
     
-    auto allocate (size_t n) -> byte*
+    auto allocate (size_type n) noexcept -> byte*
     {
-        size_t aligned_n = align_up (n);
-        size_t available_bytes = static_cast <size_t> (m_buffer + N - m_ptr);
+        size_type aligned_n = align_up (n);
+        size_type available_bytes = static_cast <size_type> (m_buffer + size_value - m_ptr);
         
         if (available_bytes >= aligned_n)
         {
-            return exchange (m_ptr, m_ptr + aligned_n);
+//            return exchange (m_ptr, m_ptr + aligned_n);
+            auto* r = m_ptr;
+            m_ptr += aligned_n;
+            return r;
             
         } else
         {
-            return (byte*) ::operator new (n);
+            return static_cast<byte*> (::operator new (n));
         }
     }
     
-    auto deallocate (byte* p, size_t n) -> void
+    
+    auto deallocate (byte* p, size_type n) noexcept -> void
     {
         if (pointer_in_buffer (p))
         {
@@ -40,18 +49,40 @@ struct arena
         }
     }
     
-private:
-    alignas (alignment) byte m_buffer [N];
-    byte* m_ptr;
-    
-    static auto align_up (size_t n) noexcept -> size_t
+    auto reset () noexcept -> void
     {
-        return (n + (alignment - 1) & ~(alignment - 1));
+        m_ptr = m_buffer;
+    }
+    
+    auto used () const noexcept -> size_t
+    {
+        return static_cast <size_t> (m_ptr - m_buffer);
+    }
+    
+    template <typename T>
+    [[nodiscard]] operator T* ()
+    {
+        return reinterpret_cast <T*> (allocate (sizeof (T)));
+    }
+    
+    template <typename T>
+    auto operator () (T* ptr) -> void
+    {
+        deallocate (reinterpret_cast <byte*> (ptr), sizeof (T));
+    }
+    
+private:
+    alignas (alignment) byte m_buffer [size_value];
+    byte* m_ptr {m_buffer};
+    
+    static auto align_up (size_type n) noexcept -> size_type
+    {
+        return (n + (alignment - 1)) & ~(alignment - 1);
     }
     
     auto pointer_in_buffer (byte const* p) noexcept -> bool
     {
-        return uintptr_t (p) >= uintptr_p (m_buffer) and uintptr_t (p)  < uintptr_p (m_buffer) + N;
+        return uintptr_t (p) >= uintptr_t (m_buffer) and uintptr_t (p)  < uintptr_t (m_buffer) +size_value;
     }
 };
 

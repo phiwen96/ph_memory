@@ -1,4 +1,4 @@
-#define RUN_CATCH
+//#define RUN_CATCH
 
 
 #if defined (RUN_CATCH)
