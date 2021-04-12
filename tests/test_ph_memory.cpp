@@ -6,7 +6,7 @@ using namespace std;
 
 
 
-TEST_CASE ("")
+TEST_CASE ("arena")
 {
     cout << "tjo" << endl;
 }
