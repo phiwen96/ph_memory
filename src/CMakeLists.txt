@@ -30,6 +30,9 @@ add_library (${self} STATIC
 	${SOURCE_LIST}  ${HEADER_LIST} 
 )
 
+target_compile_definitions (${PROJECT_NAME} PRIVATE "$<$<CONFIG:DEBUG>:DEBUG> $<$<CONFIG:RELEASE>:RELEASE>")
+
+
 
 
 
